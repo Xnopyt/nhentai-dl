@@ -47,6 +47,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Please enter the ID's to download separated by commas: ")
 	text, _ := reader.ReadString('\n')
+	text = strings.Replace(text, "\r", "", -1)
 	idstring := strings.Split(strings.Split(text, "\n")[0], ",")
 	var ids []int
 	for _, v := range idstring {
