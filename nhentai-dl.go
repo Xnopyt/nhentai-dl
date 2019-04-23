@@ -110,7 +110,10 @@ func main() {
 		time.Sleep(time.Second)
 	}
 	sendVerbose("Waiting for all routines to cleanup...")
-	time.Sleep(5 * time.Second)
+	for activeJobs > 0 {
+		sendVerbose("Waiting on " + strconv.Itoa(activeJobs) + " to cleanup.")
+		time.Sleep(time.Second)
+	}
 	fmt.Println("Download complete!")
 }
 
