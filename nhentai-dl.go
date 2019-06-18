@@ -126,7 +126,9 @@ func download(j job, mux *sync.Mutex) {
 	resp, err := http.Get(j.url)
 	if err != nil {
 		fmt.Println("Error downloading " + j.url + ": " + err.Error())
+		mux.Lock()
 		activeJobs--
+		mux.Unlock()
 		return
 	}
 	defer resp.Body.Close()
