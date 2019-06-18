@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Xnopyt/nhentai-go"
@@ -98,14 +99,17 @@ func main() {
 	}
 	fmt.Println("Created " + strconv.Itoa(jobCount) + " jobs.")
 	fmt.Println(strconv.Itoa(*threads) + " goroutines will be used to download.")
+	mux := &sync.Mutex{}
 	for jobCount > 0 {
 		for activeJobs < *threads {
 			if jobCount < 1 {
 				break
 			}
-			go download(jobs[jobCount-1])
+			go download(jobs[jobCount-1], mux)
 			jobCount--
+			mux.Lock()
 			activeJobs++
+			mux.Unlock()
 		}
 		time.Sleep(time.Second)
 	}
@@ -117,7 +121,7 @@ func main() {
 	fmt.Println("Download complete!")
 }
 
-func download(j job) {
+func download(j job, mux *sync.Mutex) {
 	sendVerbose("Downloading: " + j.url)
 	resp, err := http.Get(j.url)
 	if err != nil {
@@ -129,13 +133,17 @@ func download(j job) {
 	out, err := os.Create(j.path)
 	if err != nil {
 		fmt.Println("Error downloading " + j.url + ": " + err.Error())
+		mux.Lock()
 		activeJobs--
+		mux.Unlock()
 		return
 	}
 	defer out.Close()
 	io.Copy(out, resp.Body)
 	sendVerbose("Finished job for " + j.url)
+	mux.Lock()
 	activeJobs--
+	mux.Unlock()
 	time.Sleep(10 * time.Second)
 }
 
